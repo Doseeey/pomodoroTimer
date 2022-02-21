@@ -1,8 +1,9 @@
-import {StyleSheet, Text, View, Button} from 'react-native';
+import {StyleSheet, Text, View, Button, Vibration} from 'react-native';
 import React from 'react';
+import Settings from './Settings';
 
-const worktime = 25*60;
-const breaktime = 5*60;
+let worktime = 25*60;
+let breaktime = 5*60;
 
 const styles = StyleSheet.create({
     workBox: {
@@ -55,6 +56,7 @@ export default class Counter extends React.Component {
             break_count: breaktime,
             isWorking: true,
             isRunning: false,
+            settingsPanel: false,
         }
     }
 
@@ -73,23 +75,36 @@ export default class Counter extends React.Component {
             this.setState(prevState => ({break_count: prevState.break_count - 1}))
             if (this.state.break_count === -1) {
                 this.toggleState();
-                this.setState(prevState => ({break_count: worktime}));
+                this.setState(prevState => ({break_count: breaktime}));
             }
         }
     }
 
-    toggleState = () => this.setState(prevState => ({isWorking: !prevState.isWorking}))
+    toggleState = () => {
+        this.setState(prevState => ({isWorking: !prevState.isWorking}))
+        Vibration.vibrate(100)
+    }
 
     toggleRun = () => this.setState(prevState => ({isRunning: !prevState.isRunning}))
 
     resetTimer = () => this.setState({
         isWorking: true,
         isRunning: false,
-        work_count: worktime,
-        break_count: breaktime,
+        work_count: 25*60,
+        break_count: 5*60,
     })
     
+    toggleSettings = () => this.setState(prevState => ({settingsPanel: !prevState.settingsPanel}))
+
+    changeTime = time => {
+        this.setState(prevState => ({settingsPanel: false, isWorking: true, isRunning: false, work_count: time.worktime, break_count: time.breaktime}))
+        worktime = time.worktime
+        breaktime = time.breaktime
+    }
+
     render() {
+        if (this.state.settingsPanel) return <Settings onSubmit={this.changeTime}/>
+
         let button;
         if (this.state.isRunning) {
             button = <Button style={styles.button} title = "Stop" onPress = {this.toggleRun}/>;
@@ -111,6 +126,10 @@ export default class Counter extends React.Component {
                     <View style={styles.buttonBox}>
                         <Button style={styles.button} title = "Reset" onPress = {this.resetTimer}/>                        
                     </View>
+
+                    <View style={styles.buttonBox}>
+                        <Button style={styles.button} title = "Settings" onPress = {this.toggleSettings}/>                        
+                    </View>
                 </View>
             );
         }
@@ -127,8 +146,36 @@ export default class Counter extends React.Component {
                     <View style={styles.buttonBox}>
                         <Button style={styles.button} title = "Reset" onPress = {this.resetTimer}/>                        
                     </View>
+
+                    <View style={styles.buttonBox}>
+                        <Button style={styles.button} title = "Settings" onPress = {this.toggleSettings}/>                        
+                    </View>
                 </View>
             );
         }
+
+        /*return (
+            <View style={styles.workBox}>
+                {this.state.isWorking ? (
+                    <View>
+                        <Text style={styles.count}>{('00'+Math.floor(this.state.work_count/60)).slice(-2)}:{('00'+this.state.work_count%60).slice(-2)}</Text>
+                        <Text style={styles.text}>Working time...</Text>
+                    </View>
+                ) : (
+                    <View>
+                        <Text style={styles.count}>{('00'+Math.floor(this.state.break_count/60)).slice(-2)}:{('00'+this.state.break_count%60).slice(-2)}</Text>
+                        <Text style={styles.text}>Breaktime!</Text>
+                    </View>
+                )
+                }
+                <View style={[styles.buttonBox, styles.moveTop]}>
+                    {button}                       
+                </View>
+
+                <View style={styles.buttonBox}>
+                    <Button style={styles.button} title = "Reset" onPress = {this.resetTimer}/>                        
+                </View>
+            </View>
+        );*/ // fine way to return
     }
 }
